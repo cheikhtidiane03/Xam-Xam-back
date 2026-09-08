@@ -1,0 +1,28 @@
+# Profil "prod" : active avec SPRING_PROFILES_ACTIVE=prod (voir Dockerfile /
+# config Railway-Render). Ne redefinit que ce qui doit differer du profil
+# par defaut (application.yml) ; tout le reste (JWT, Claude, OCR, mail...)
+# continue de venir des variables d'environnement deja definies.
+
+spring:
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: validate # jamais update/create en prod : Flyway est la seule source de verite du schema
+
+  flyway:
+    enabled: true
+
+logging:
+  level:
+    root: WARN
+    com.xaamxaam: INFO
+    org.springframework.security: WARN
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+# Rappel : app.cors.allowed-origins DOIT etre configure via la variable
+# d'environnement CORS_ALLOWED_ORIGINS avec le vrai domaine du frontend en
+# production - ne jamais laisser la valeur par defaut localhost.

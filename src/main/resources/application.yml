@@ -1,0 +1,127 @@
+spring:
+  application:
+    name: xaamxaam-backend
+
+  datasource:
+    # Priorite a DB_URL si explicitement fourni (ex : docker-compose local).
+    # Sinon, compose l'URL JDBC a partir de morceaux separes - pratique avec
+    # Render, qui peut injecter DB_HOST/DB_PORT/DB_NAME automatiquement
+    # depuis sa base PostgreSQL managee (voir render.yaml, bloc "fromDatabase").
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xaamxaam}}
+    username: ${DB_USERNAME:xaamxaam}
+    password: ${DB_PASSWORD:xaamxaam}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Flyway gere le schema : ne jamais utiliser "update" ou "create" en dehors du dev local rapide
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # Taille max des fichiers uploades (photos d'exercice pour l'OCR)
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+  # ===== Envoi d'emails (verification de compte, mot de passe oublie, rapports hebdo parent) =====
+  mail:
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+server:
+  # Railway et Render injectent automatiquement la variable PORT ; on la
+  # priorise, avec repli sur SERVER_PORT (config manuelle) puis 8080 (local).
+  port: ${PORT:${SERVER_PORT:8080}}
+
+# ===== Actuator (health check pour Railway/Render) =====
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  health:
+    # Le healthcheck SMTP echoue tant que SMTP_HOST/USERNAME/PASSWORD ne
+    # sont pas correctement configures (ce qui est le cas par defaut en
+    # dev local), ce qui faisait passer TOUT /actuator/health a DOWN alors
+    # que l'application et la base fonctionnaient normalement. On desactive
+    # ce sous-indicateur : l'envoi d'email echoue deja silencieusement et
+    # sans bloquer les actions metier (voir EmailService), inutile de le
+    # faire aussi remonter dans le health check global.
+    mail:
+      enabled: false
+
+# ===== Configuration JWT =====
+app:
+  jwt:
+    secret: ${JWT_SECRET:changeMeInProdWithAStrongRandomSecretOfAtLeast256Bits}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24h
+
+  # ===== CORS : origines explicitement autorisees a appeler l'API =====
+  cors:
+    # Port par defaut de Vite (le frontend de ce projet), pas 3000 (React
+    # generique/Next.js) - c'etait la vraie cause des erreurs CORS 403 en
+    # dev local meme sans configurer explicitement CORS_ALLOWED_ORIGINS.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+  # ===== Expediteur des emails transactionnels =====
+  mail:
+    expediteur: ${MAIL_EXPEDITEUR:no-reply@xaamxaam.sn}
+    url-frontend: ${FRONTEND_URL:http://localhost:3000}
+
+  # ===== Protection brute-force sur la connexion =====
+  securite:
+    max-tentatives-connexion: ${MAX_TENTATIVES_CONNEXION:5}
+    fenetre-blocage-minutes: ${FENETRE_BLOCAGE_MINUTES:15}
+
+  # ===== Configuration API Anthropic Claude =====
+  claude:
+    api-key: ${ANTHROPIC_API_KEY:}
+    api-url: ${ANTHROPIC_API_URL:https://api.anthropic.com/v1/messages}
+    model: ${ANTHROPIC_MODEL:claude-sonnet-5}
+    anthropic-version: "2023-06-01"
+    max-tokens: 1024
+    # Limite de requetes IA par eleve et par jour (gestion du cout - cf. cahier des charges section 7)
+    quota-requetes-jour-eleve: ${QUOTA_REQUETES_JOUR:30}
+
+  # ===== Configuration OCR (extraction de texte depuis une photo d'exercice) =====
+  ocr:
+    api-key: ${OCR_API_KEY:helloworld} # "helloworld" = cle de demo publique OCR.space, tres limitee, a remplacer
+    api-url: ${OCR_API_URL:https://api.ocr.space/parse/image}
+    langue: ${OCR_LANGUE:fre}
+
+# ===== Documentation Swagger / OpenAPI =====
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+
+logging:
+  level:
+    com.xaamxaam: DEBUG
+    org.springframework.security: INFO

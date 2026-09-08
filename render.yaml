@@ -1,0 +1,90 @@
+# Configuration Render (Infrastructure as Code) - https://render.com/docs/blueprint-spec
+#
+# Deploiement : connecter le repo GitHub sur render.com -> New > Blueprint ->
+# selectionner ce repo. Render lit ce fichier automatiquement et cree a la fois
+# le service web et la base de donnees managee decrits ci-dessous.
+#
+# Variables marquees "sync: false" doivent etre saisies manuellement dans le
+# dashboard Render apres la creation du service (jamais commitees dans le repo).
+# Les variables DB_* sont au contraire injectees AUTOMATIQUEMENT par Render
+# depuis la base "xaamxaam-db" grace au bloc "fromDatabase" - aucune copie
+# manuelle d'identifiants necessaire.
+#
+# IMPORTANT - nom de service unique sur TOUT Render (tous comptes
+# confondus) : si "xaamxaam-backend" est deja pris, Render choisira un nom
+# different. Dans ce cas, mets a jour VITE_API_URL cote frontend (dashboard
+# Vercel) avec l'URL reelle de ce service.
+#
+# Le frontend est deploye separement sur Vercel (voir xaamxaam-frontend/README.md),
+# pas sur Render.
+
+databases:
+  - name: xaamxaam-db
+    databaseName: xaamxaam
+    user: xaamxaam
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: xaamxaam-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: frankfurt
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # ===== Base de donnees - injectee automatiquement depuis xaamxaam-db =====
+      - key: DB_HOST
+        fromDatabase:
+          name: xaamxaam-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: xaamxaam-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: xaamxaam-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: xaamxaam-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: xaamxaam-db
+          property: password
+
+      # ===== A renseigner manuellement dans le dashboard Render =====
+      - key: JWT_SECRET
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OCR_API_KEY
+        sync: false
+
+      # Le frontend est deploye sur Vercel (pas Render), dont le pattern
+      # d'URL n'est pas garanti a l'avance (depend du nom de projet et du
+      # scope d'equipe). Copie l'URL exacte affichee dans le dashboard
+      # Vercel apres le premier deploiement (ex : https://xaamxaam-frontend.vercel.app).
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_EXPEDITEUR
+        sync: false
+      # Meme URL Vercel que CORS_ALLOWED_ORIGINS - utilisee dans les liens
+      # des emails transactionnels (verification, reset password).
+      - key: FRONTEND_URL
+        sync: false
