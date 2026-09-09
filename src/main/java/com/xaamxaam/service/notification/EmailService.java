@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +16,15 @@ import org.springframework.stereotype.Service;
  * rapport hebdomadaire parent). Centralise ici pour ne changer qu'un seul
  * endroit si le fournisseur SMTP change plus tard (ex : passage a un
  * service transactionnel type Brevo/Sendinblue plutot que du SMTP direct).
+ *
+ * IMPORTANT : @Async. L'envoi d'email ne doit JAMAIS bloquer la reponse
+ * HTTP d'une action metier (inscription, mot de passe oublie...). Sans ca,
+ * un SMTP mal configure ou injoignable (host/identifiants vides, comme en
+ * environnement de demo sans SMTP configure) fait attendre la requete
+ * entrante pendant tout le timeout de connexion reseau par defaut de
+ * Java, potentiellement plusieurs minutes - c'est exactement ce qui
+ * rendait /api/auth/register anormalement lent en production.
+ * Necessite @EnableAsync sur la classe principale (voir XaamXaamApplication).
  */
 @Service
 @RequiredArgsConstructor
@@ -24,6 +34,7 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final MailProperties mailProperties;
 
+    @Async
     public void envoyerEmailHtml(String destinataire, String sujet, String corpsHtml) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

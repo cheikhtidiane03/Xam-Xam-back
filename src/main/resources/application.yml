@@ -47,6 +47,14 @@ spring:
           auth: true
           starttls:
             enable: true
+          # Timeouts courts (5s) plutot que les valeurs par defaut de Java
+          # (potentiellement plusieurs minutes) : si le SMTP est mal
+          # configure ou injoignable, l'envoi echoue vite plutot que de
+          # bloquer indefiniment un thread. Combine a @Async sur
+          # EmailService, qui empeche deja tout blocage de la reponse HTTP.
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 server:
   # Railway et Render injectent automatiquement la variable PORT ; on la
