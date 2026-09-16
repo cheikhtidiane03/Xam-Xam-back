@@ -48,6 +48,13 @@ public class SuperadminController {
         return ResponseEntity.ok(superadminService.listerComptesEnAttente());
     }
 
+    @GetMapping("/comptes")
+    @Operation(summary = "Lister TOUS les comptes utilisateurs, quel que soit leur statut",
+            description = "Vue de gestion complete avec infos (nom, email, role, actif, date de creation).")
+    public ResponseEntity<List<Utilisateur>> tousLesComptes() {
+        return ResponseEntity.ok(superadminService.listerTousLesComptes());
+    }
+
     @PostMapping("/comptes/{utilisateurId}/valider")
     @Operation(summary = "Valider un compte")
     public ResponseEntity<Void> validerCompte(@PathVariable UUID utilisateurId) {

@@ -35,6 +35,11 @@ public class EtablissementService {
         return etablissementRepository.findAll();
     }
 
+    /** Utilise par le formulaire d'inscription public (avant connexion) : uniquement les etablissements valides et actifs. */
+    public List<Etablissement> listerPublics() {
+        return etablissementRepository.findByEnAttenteValidationFalseAndLicenceActiveTrue();
+    }
+
     @Transactional
     public Etablissement validerEtablissement(UUID etablissementId) {
         Etablissement etablissement = recuperer(etablissementId);

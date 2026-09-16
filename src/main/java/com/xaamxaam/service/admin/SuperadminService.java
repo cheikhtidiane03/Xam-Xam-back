@@ -17,11 +17,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Logique specifique au role Superadmin : validation manuelle des comptes,
- * moderation, messages globaux, vue d'ensemble du projet (cf. section 12
- * du cahier des charges).
- */
 @Service
 @RequiredArgsConstructor
 public class SuperadminService {
@@ -34,6 +29,11 @@ public class SuperadminService {
         return utilisateurRepository.findAll().stream()
                 .filter(u -> !u.isActif())
                 .toList();
+    }
+
+    /** Liste TOUS les utilisateurs, quel que soit leur statut - vue de gestion complete pour le superadmin. */
+    public List<Utilisateur> listerTousLesComptes() {
+        return utilisateurRepository.findAll();
     }
 
     @Transactional

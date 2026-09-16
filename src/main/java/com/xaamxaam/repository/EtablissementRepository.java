@@ -8,4 +8,7 @@ import java.util.UUID;
 
 public interface EtablissementRepository extends JpaRepository<Etablissement, UUID> {
     List<Etablissement> findByEnAttenteValidationTrue();
+
+    /** Etablissements valides et avec une licence active, exposes publiquement (avant connexion). */
+    List<Etablissement> findByEnAttenteValidationFalseAndLicenceActiveTrue();
 }
