@@ -7,7 +7,7 @@ spring:
     # Sinon, compose l'URL JDBC a partir de morceaux separes - pratique avec
     # Render, qui peut injecter DB_HOST/DB_PORT/DB_NAME automatiquement
     # depuis sa base PostgreSQL managee (voir render.yaml, bloc "fromDatabase").
-    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:xaamxaam}}
+    url: ${DB_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:xaamxaam}}
     username: ${DB_USERNAME:xaamxaam}
     password: ${DB_PASSWORD:xaamxaam}
     driver-class-name: org.postgresql.Driver

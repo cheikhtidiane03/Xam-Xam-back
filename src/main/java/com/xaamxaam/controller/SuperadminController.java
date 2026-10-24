@@ -2,10 +2,13 @@ package com.xaamxaam.controller;
 
 import com.xaamxaam.domain.etablissement.Etablissement;
 import com.xaamxaam.domain.exercice.SignalementContournement;
+import com.xaamxaam.domain.user.Role;
 import com.xaamxaam.domain.user.Utilisateur;
 import com.xaamxaam.dto.request.EtablissementRequest;
 import com.xaamxaam.dto.response.EtablissementResponse;
+import com.xaamxaam.dto.response.ExerciceListeResponse;
 import com.xaamxaam.dto.response.SignalementContournementResponse;
+import com.xaamxaam.dto.response.UtilisateurListeResponse;
 import com.xaamxaam.dto.response.VueGlobaleResponse;
 import com.xaamxaam.mapper.EtablissementMapper;
 import com.xaamxaam.service.admin.SuperadminService;
@@ -44,8 +47,30 @@ public class SuperadminController {
 
     @GetMapping("/comptes/en-attente")
     @Operation(summary = "Lister les comptes en attente de validation")
-    public ResponseEntity<List<Utilisateur>> comptesEnAttente() {
-        return ResponseEntity.ok(superadminService.listerComptesEnAttente());
+    public ResponseEntity<List<UtilisateurListeResponse>> comptesEnAttente() {
+        List<UtilisateurListeResponse> reponse = superadminService.listerComptesEnAttente().stream()
+                .map(u -> new UtilisateurListeResponse(
+                        u.getId(), u.getPrenom(), u.getNom(), u.getEmail(),
+                        u.getRole().name(), u.isActif(), u.getDateCreation(), null, 0L))
+                .toList();
+        return ResponseEntity.ok(reponse);
+    }
+
+    @GetMapping("/utilisateurs")
+    @Operation(summary = "Lister les utilisateurs",
+            description = "Filtres optionnels : role, et actif=true (compte actif ayant lance un exercice sur les 30 derniers jours).")
+    public ResponseEntity<List<UtilisateurListeResponse>> utilisateurs(
+            @RequestParam(required = false) Role role,
+            @RequestParam(defaultValue = "false") boolean actif) {
+        return ResponseEntity.ok(superadminService.listerUtilisateurs(role, actif));
+    }
+
+    @GetMapping("/exercices")
+    @Operation(summary = "Lister les exercices",
+            description = "periode=aujourdhui pour ne garder que les exercices du jour.")
+    public ResponseEntity<List<ExerciceListeResponse>> exercices(
+            @RequestParam(required = false) String periode) {
+        return ResponseEntity.ok(superadminService.listerExercices("aujourdhui".equals(periode)));
     }
 
     @GetMapping("/comptes")
