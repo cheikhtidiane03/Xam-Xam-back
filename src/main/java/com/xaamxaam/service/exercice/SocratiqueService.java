@@ -136,6 +136,12 @@ public class SocratiqueService {
         String nomLangue = langue == Langue.EN ? "English" : "francais";
 
         String systemPrompt = """
+                INTERDICTION ABSOLUE : le champ "feedback" ne doit contenir AUCUNE formule, AUCUN calcul,
+                AUCUN resultat numerique de la resolution (ni valeur intermediaire, ni reponse finale),
+                AUCUNE etape resolue. Ecrire par exemple "72/3.6 = 20" ou "450/20 = 22.5" est INTERDIT.
+                Tu peux seulement dire, sans chiffres de resolution, ce que l'eleve a bien compris et
+                quelle idee il doit expliquer davantage (sous forme de piste ou de question).
+
                 Tu evalues la reformulation d'un eleve qui explique avec ses propres mots
                 comment il a resolu un exercice (methode Feynman). Tu dois juger la
                 comprehension reelle, pas la forme.
@@ -156,6 +162,9 @@ public class SocratiqueService {
                 Enonce de l'exercice : %s
 
                 Reformulation de l'eleve : %s
+
+                Rappel : dans le feedback, n'ecris aucun calcul ni aucun nombre issu de la resolution
+                de l'exercice ; indique seulement ce qui manque dans l'explication.
                 """.formatted(exercice.getEnonce(), texteReformulation);
 
         String reponseJson = claudeApiClient.envoyerMessage(systemPrompt, messageUtilisateur);
